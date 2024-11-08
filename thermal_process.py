@@ -166,3 +166,12 @@ def otto_igas(n, Vmin, Vmax, T3, T1, gamma=1.4, cv=5/2 * R):
     ax.set_title("Espacio PVT del Ciclo de Otto")
     ax.legend()
     plt.show()
+
+
+def diesel_igas(n,p_iso,T_min,T_max,gamma=1.4):
+    isobar()
+    adiabatic()
+    isometric()
+    adiabatic()
+    
+    pass
