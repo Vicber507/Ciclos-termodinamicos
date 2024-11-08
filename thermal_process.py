@@ -30,9 +30,9 @@ def isometric(n,V,Ti,Tf):
 def isobar(n,P,Ti,Tf):
     v_i = (n * R * Ti) / P
     v_f = (Tf * n * R) / P
-    V = np.linspace(v_i, v_f,(150))
+    V = np.linspace(v_i, v_f,150)
     T = (P*V)/(n*R)
-    P = np.full_like(P, V)  
+    P = np.full_like(V,P )  
     return V, P, T
 
 
@@ -168,10 +168,58 @@ def otto_igas(n, Vmin, Vmax, T3, T1, gamma=1.4, cv=5/2 * R):
     plt.show()
 
 
-def diesel_igas(n,p_iso,T_min,T_max,gamma=1.4):
-    isobar()
-    adiabatic()
-    isometric()
-    adiabatic()
+def diesel_igas(n,V_min,V_max,T_max,p_iso,gamma=1.4,cp=(7/2)*R,cv=(5/2) * R):
     
-    pass
+    T1 = (p_iso*V_min)/(n*R)
+    V2 = (n*R*T_max)/p_iso
+    T3 = T_max*(V2/V_max)**(gamma-1)
+    T4 = T1*(((n*R*T1)/p_iso)/V_max)**(gamma-1)
+    
+    ab_v, ab_p, T_ab = isobar(n, p_iso, T1, T_max)                     # Expansión isobara (A -> B)
+    bc_v, bc_p, T_bc = adiabatic(n, T_max, T3, V2, gamma)              # expansion adiabatica (B -> C)
+    cd_v, cd_p, T_cd = isometric(n, V_max, T3,T4)                      # reduccion isometrica (C -> D)
+    da_v, da_p, T_da = adiabatic(n, T4, T1, V_max, gamma)              # compresion adiabatica(D -> A)
+    
+    Q_in = n * cp * (T_max-T1)  # Calor añadido en isobaria (A -> B)
+    Q_out = n * cv * (T4 - T3) # Calor liberado en isocórica (C -> D)
+    
+    
+    # Gráfico 2D PV 
+    plt.figure(figsize=(12, 6))
+    plt.plot(ab_v, ab_p, label=f"Isobarico (A -> B)", color='darkcyan')
+    plt.plot(bc_v, bc_p, label=rf"Adiabatico (B -> C), $Q_{{in}}$ = {round(Q_in)} J", color='firebrick')
+    plt.plot(cd_v, cd_p, label=f"Isometrico (C -> D)", color='mediumseagreen')
+    plt.plot(da_v, da_p, label=rf"Adiabatico (D -> A), $Q_{{out}}$ = {round(Q_out)} J", color='royalblue')
+    plt.xlabel("Volumen (m³)")
+    plt.ylabel("Presión (Pa)")
+    plt.title("Ciclo de Diesel en Diagrama PV")
+    plt.legend()
+    plt.grid()
+    plt.show()
+
+    # Gráfico 2D TV 
+    plt.figure(figsize=(12, 6))
+    plt.plot(ab_v, T_ab, label="Isoobarico (A -> B)", color='darkcyan')
+    plt.plot(bc_v, T_bc, label=rf"Adiabatico (B -> C), $Q_{{in}}$ = {round(Q_in)} J", color='firebrick')
+    plt.plot(cd_v, T_cd, label="Isometrico (C -> D)", color='mediumseagreen')
+    plt.plot(da_v, T_da, label=rf"Adiabatico (D -> A), $Q_{{out}}$ = {round(Q_out)} J", color='royalblue')
+    plt.xlabel("Volumen (m³)")
+    plt.ylabel("Temperatura (K)")
+    plt.title("Ciclo de Diesel en Diagrama TV")
+    plt.legend()
+    plt.grid()
+    plt.show()
+
+    # Gráfico 3D
+    fig = plt.figure(figsize=(12, 8))
+    ax = fig.add_subplot(111, projection='3d')
+    ax.plot(ab_p, T_ab, ab_v, label="Isobarico (A -> B)", color='darkcyan')
+    ax.plot(bc_p, T_bc, bc_v, label=rf"Adiabatico (B -> C), $Q_{{in}}$ = {round(Q_in)} J", color='firebrick')
+    ax.plot(cd_p, T_cd, cd_v, label="Isometrico (C -> D)", color='mediumseagreen')
+    ax.plot(da_p, T_da, da_v, label=rf"Adiabatico (D -> A), $Q_{{out}}$ = {round(Q_out)} J", color='royalblue')
+    ax.set_xlabel("Presión (Pa)")
+    ax.set_ylabel("Temperatura (K)")
+    ax.set_zlabel("Volumen (m³)")
+    ax.set_title("Espacio PVT del Ciclo de Diesel")
+    ax.legend()
+    plt.show()
